@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Mail, Users, MousePointerClick, AlertCircle, Send, TrendingUp } from "lucide-react";
 import MetricCard from "../shared/MetricCard";
 import LoadingSpinner from "../shared/LoadingSpinner";
+import ErrorState from "../shared/ErrorState";
 import CampaignList from "./CampaignList";
 import SubscriberStats from "./SubscriberStats";
 import SendCampaign from "./SendCampaign";
@@ -21,29 +22,35 @@ const EmailDashboard = () => {
   const [subscriberData, setSubscriberData] = useState([]);
   const [metrics, setMetrics] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [showSendForm, setShowSendForm] = useState(false);
 
+  const fetchData = async () => {
+    setLoading(true);
+    setError(false);
+    try {
+      const [campaignData, subData, metricsData] = await Promise.all([
+        getEmailCampaigns(),
+        getSubscriberGrowth(),
+        getEmailMetrics(),
+      ]);
+      setCampaigns(campaignData);
+      setSubscriberData(subData);
+      setMetrics(metricsData);
+    } catch (err) {
+      console.error("Failed to fetch email data:", err);
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [campaignData, subData, metricsData] = await Promise.all([
-          getEmailCampaigns(),
-          getSubscriberGrowth(),
-          getEmailMetrics(),
-        ]);
-        setCampaigns(campaignData);
-        setSubscriberData(subData);
-        setMetrics(metricsData);
-      } catch (err) {
-        console.error("Failed to fetch email data:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchData();
   }, []);
 
   if (loading) return <LoadingSpinner message="Connecting to Email API..." />;
+  if (error) return <ErrorState title="Email API Connection Failed" message="Unable to fetch campaign data from the email marketing service. Check API credentials and try again." onRetry={fetchData} />;
 
   return (
     <div className="space-y-6">

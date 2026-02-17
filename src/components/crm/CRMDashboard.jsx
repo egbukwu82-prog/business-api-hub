@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Users, DollarSign, TrendingUp, Target, BarChart3 } from "lucide-react";
 import MetricCard from "../shared/MetricCard";
 import LoadingSpinner from "../shared/LoadingSpinner";
+import ErrorState from "../shared/ErrorState";
 import ContactsList from "./ContactsList";
 import DealsPipeline from "./DealsPipeline";
 import ActivityFeed from "./ActivityFeed";
@@ -23,32 +24,38 @@ const CRMDashboard = () => {
   const [activities, setActivities] = useState([]);
   const [metrics, setMetrics] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [activeView, setActiveView] = useState("pipeline");
 
+  const fetchData = async () => {
+    setLoading(true);
+    setError(false);
+    try {
+      const [contactData, dealData, activityData, metricsData] =
+        await Promise.all([
+          getContacts(),
+          getDeals(),
+          getActivities(),
+          getCRMMetrics(),
+        ]);
+      setContacts(contactData);
+      setDeals(dealData);
+      setActivities(activityData);
+      setMetrics(metricsData);
+    } catch (err) {
+      console.error("Failed to fetch CRM data:", err);
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [contactData, dealData, activityData, metricsData] =
-          await Promise.all([
-            getContacts(),
-            getDeals(),
-            getActivities(),
-            getCRMMetrics(),
-          ]);
-        setContacts(contactData);
-        setDeals(dealData);
-        setActivities(activityData);
-        setMetrics(metricsData);
-      } catch (err) {
-        console.error("Failed to fetch CRM data:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchData();
   }, []);
 
   if (loading) return <LoadingSpinner message="Connecting to CRM API..." />;
+  if (error) return <ErrorState title="CRM API Connection Failed" message="Unable to fetch contact and deal data from the CRM service. Verify API configuration and try again." onRetry={fetchData} />;
 
   const views = [
     { id: "pipeline", label: "Pipeline" },

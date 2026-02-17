@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Eye, Users, Clock, ArrowDownRight } from "lucide-react";
 import MetricCard from "../shared/MetricCard";
 import LoadingSpinner from "../shared/LoadingSpinner";
+import ErrorState from "../shared/ErrorState";
 import TrafficChart from "./TrafficChart";
 import MetricsCards from "./MetricsCards";
 import TopPages from "./TopPages";
@@ -22,35 +23,41 @@ const AnalyticsDashboard = () => {
   const [metrics, setMetrics] = useState(null);
   const [realtimeData, setRealtimeData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  const fetchData = async () => {
+    setLoading(true);
+    setError(false);
+    try {
+      const [traffic, pages, devices, sources, metricsData, realtime] =
+        await Promise.all([
+          getTrafficData(),
+          getTopPages(),
+          getDeviceBreakdown(),
+          getTrafficSources(),
+          getAnalyticsMetrics(),
+          getRealtimeData(),
+        ]);
+      setTrafficData(traffic);
+      setTopPagesData(pages);
+      setDeviceData(devices);
+      setSourceData(sources);
+      setMetrics(metricsData);
+      setRealtimeData(realtime);
+    } catch (err) {
+      console.error("Failed to fetch analytics data:", err);
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [traffic, pages, devices, sources, metricsData, realtime] =
-          await Promise.all([
-            getTrafficData(),
-            getTopPages(),
-            getDeviceBreakdown(),
-            getTrafficSources(),
-            getAnalyticsMetrics(),
-            getRealtimeData(),
-          ]);
-        setTrafficData(traffic);
-        setTopPagesData(pages);
-        setDeviceData(devices);
-        setSourceData(sources);
-        setMetrics(metricsData);
-        setRealtimeData(realtime);
-      } catch (err) {
-        console.error("Failed to fetch analytics data:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchData();
   }, []);
 
   if (loading) return <LoadingSpinner message="Connecting to Analytics API..." />;
+  if (error) return <ErrorState title="Analytics API Connection Failed" message="Unable to fetch traffic and engagement data from the analytics service. Check API access and try again." onRetry={fetchData} />;
 
   return (
     <div className="space-y-6">
