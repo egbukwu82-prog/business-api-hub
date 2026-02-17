@@ -36,14 +36,16 @@ Each integration follows real-world API patterns with proper service abstraction
 **Error Boundaries** — Each dashboard handles API failures gracefully with retry functionality, not just console.error() calls.
 
 ## Screenshots
-
 ### Email Marketing Dashboard
+![Email Dashboard](docs/email-dashboard.png)
 Campaign performance tracking with subscriber growth visualization, engagement metrics, and a working campaign creation form.
 
 ### CRM Pipeline View
+![CRM Pipeline](docs/crm-pipeline.png)
 Kanban-style deal pipeline with Prospect → Qualified → Proposal → Closed Won stages. Includes probability scoring, days-in-stage tracking, and pipeline value distribution.
 
 ### Analytics Overview
+![Analytics Dashboard](docs/analytics-dashboard.png)
 Multi-metric traffic charts, top pages with conversion rate analysis, device breakdown pie chart, and traffic source attribution with trend indicators.
 
 ## Tech Stack
